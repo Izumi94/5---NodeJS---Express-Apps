@@ -1,3 +1,4 @@
+const { request, response } = require('express');
 const express = require('express');
 
 // express app
@@ -5,12 +6,18 @@ const app = express();
 
 app.set('view engine', "ejs")
 
+app.use(express.static('public'));
+
+app.use((request, response, next) => {
+  console.log('Hi!')
+  next()
+})
+
 const blogs = [
   { title: 'Something', snippet: 'Anything'},
   { title: 'Something', snippet: 'Anything'},
   { title: 'Something', snippet: 'Anything'}
 ]
-
 
 app.get('/', (request, response) => {
   response.render('index', { blogs })
@@ -18,7 +25,7 @@ app.get('/', (request, response) => {
 
 app.get('/about', (request, response) => {
   response.render('about')
-})
+}) 
 
 app.get('/blogs/create', (request, response) => {
   response.render('create')
@@ -29,7 +36,9 @@ app.get((request, response) => {
 })
 
 // listen for requests
-app.listen(3004);
+app.listen(3010, 'localhost', () => {
+  console.log('ошибки нет')
+});
 
 
 
