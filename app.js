@@ -1,63 +1,76 @@
-const { request, response } = require('express');
-const express = require('express');
+const express = require('express')
+const mongoose = require('mongoose')
+const { result } = require('lodash')
+const Blog = require('./models/blog')
 
-// express app
-const app = express();
 
-app.set('view engine', "ejs")
 
-app.use(express.static('public'));
+const app = express()
 
-app.use((request, response, next) => {
-  console.log('Hi!')
-  next()
-})
+const dbURL = 'mongodb+srv://Sachiko:12345@izumicluster.sjs2g.mongodb.net/nodeJS-lesson7?retryWrites=true&w=majority'
+
+mongoose
+  .connect(dbURL, { useNewUrlParser: true, useUnifiedTopology: true })
+  .then((result) =>  app.listen(3001)) // listen for requests
+  .catch ((err) => console.log(err))
+
+app.set('view engine', 'ejs')
+
+app.use(express.static('public'))
+
+const links = [{text:'Home', link:'/'},{text:'Articles', link:'/about'}]
 
 const blogs = [
-  { title: 'Something', snippet: 'Anything'},
-  { title: 'Something', snippet: 'Anything'},
-  { title: 'Something', snippet: 'Anything'}
+  {
+    img: '/img/computer.png',
+    title: 'long established',
+    description:
+      'It is a long established fact that a reader will be distracted by the readable content of a page when looking at its layout. The point of using Lorem Ipsum is that....',
+    time: 'May 20th 2020',
+  },
+  {
+    img: '/img/peoples.png',
+    title: 'long established',
+    description:
+      'It is a long established fact that a reader will be distracted by the readable content of a page when looking at its layout. The point of using Lorem Ipsum is that....',
+    time: 'May 20th 2020',
+  },
+  {
+    img: '/img/computer2.png',
+    title: 'long established',
+    description:
+      'It is a long established fact that a reader will be distracted by the readable content of a page when looking at its layout. The point of using Lorem Ipsum is that....',
+    time: 'May 20th 2020',
+  },
 ]
 
-app.get('/', (request, response) => {
-  response.render('index', { blogs })
+app.get('/', (request, responce) => {
+  responce.render('index', { blogs, links }).status(200)
+})
+app.get('/about', (req, res) => {
+  res.render('about', { blogs }).status(200)
+})
+app.get('/blogs/create', (req, res) => {
+  res.render('create').status(200)
+})
+app.get('/add-blog', (req,res) => {
+  const blog = new Blog ({
+    title:'Orange',
+    description:'Orange orange',
+    imgURL: 'https://interactive-examples.mdn.mozilla.net/media/cc0-images/grapefruit-slice-332-332.jpg',
+    date: '23.06.1499',
+  });
+  blog.save()
+  .then((result) => res.send(result))
 })
 
-app.get('/about', (request, response) => {
-  response.render('about')
-}) 
+app.post('/posts')
 
-app.get('/blogs/create', (request, response) => {
-  response.render('create')
+app.get('/blogs', (req,res) => {
+  Blog.find().then((result) => {
+    res.render('index', { blogs: result, links })
+  })
 })
-
-app.get((request, response) => {
-  response.status(404).render('404')
+app.use((req, res) => {
+  res.status(404).render('404')
 })
-
-// listen for requests
-app.listen(3010, 'localhost', () => {
-  console.log('ошибки нет')
-});
-
-
-
-// app.get('/', (req, res) => {
-//   // res.send('<p>home page</p>');
-//   res.sendFile('./views/index.html', { root: __dirname });
-// });
-
-// app.get('/about', (req, res) => {
-//   // res.send('<p>about page</p>');
-//   res.sendFile('./views/about.html', { root: __dirname });
-// });
-
-// // redirects
-// app.get('/about-us', (req, res) => {
-//   res.redirect('/about');
-// });
-
-// // 404 page
-// app.use((req, res) => {
-//   res.status(404).sendFile('./views/404.html', { root: __dirname });
-// });
