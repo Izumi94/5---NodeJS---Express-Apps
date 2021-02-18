@@ -2,10 +2,12 @@ const express = require('express')
 const mongoose = require('mongoose')
 const { result } = require('lodash')
 const Blog = require('./models/blog')
-
-
+const { request, response } = require('express')
 
 const app = express()
+
+app.use(express.static('public'));
+app.use(express.urlencoded());
 
 const dbURL = 'mongodb+srv://Sachiko:12345@izumicluster.sjs2g.mongodb.net/nodeJS-lesson7?retryWrites=true&w=majority'
 
@@ -16,43 +18,22 @@ mongoose
 
 app.set('view engine', 'ejs')
 
-app.use(express.static('public'))
-
 const links = [{text:'Home', link:'/'},{text:'Articles', link:'/about'}]
 
-const blogs = [
-  {
-    img: '/img/computer.png',
-    title: 'long established',
-    description:
-      'It is a long established fact that a reader will be distracted by the readable content of a page when looking at its layout. The point of using Lorem Ipsum is that....',
-    time: 'May 20th 2020',
-  },
-  {
-    img: '/img/peoples.png',
-    title: 'long established',
-    description:
-      'It is a long established fact that a reader will be distracted by the readable content of a page when looking at its layout. The point of using Lorem Ipsum is that....',
-    time: 'May 20th 2020',
-  },
-  {
-    img: '/img/computer2.png',
-    title: 'long established',
-    description:
-      'It is a long established fact that a reader will be distracted by the readable content of a page when looking at its layout. The point of using Lorem Ipsum is that....',
-    time: 'May 20th 2020',
-  },
-]
+
 
 app.get('/', (request, responce) => {
   responce.render('index', { blogs, links }).status(200)
 })
+
 app.get('/about', (req, res) => {
   res.render('about', { blogs }).status(200)
 })
+
 app.get('/blogs/create', (req, res) => {
-  res.render('create').status(200)
+  res.status(200).render('create')
 })
+
 app.get('/add-blog', (req,res) => {
   const blog = new Blog ({
     title:'Orange',
@@ -64,13 +45,26 @@ app.get('/add-blog', (req,res) => {
   .then((result) => res.send(result))
 })
 
-app.post('/posts')
-
-app.get('/blogs', (req,res) => {
-  Blog.find().then((result) => {
-    res.render('index', { blogs: result, links })
+app.post('/blogs', (request, response) => {
+  const blog = new Blog(request.body);
+  blog.save().then(() => {
+    response.redirect('/blogs');
   })
 })
+
+app.get('/blogs', (req, res) => {
+  Blog.find().then( (blogs) => {
+    res.render('index', {blogs, links});
+  })
+})
+
+app.get('/blogs/:id', (req, res) => {
+  const id = req.params.id;
+  Blog.findById(id).then((result) => {
+    res.render('blogDetails', {blog: result });
+  });
+})
+
 app.use((req, res) => {
   res.status(404).render('404')
 })
